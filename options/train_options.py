@@ -19,7 +19,7 @@ class TrainOptions(BaseOptions):
                             help='frequency of showing training results on console')
         parser.add_argument('--save_latest_freq', type=int, default=10000,
                             help='frequency of saving the latest results')
-        parser.add_argument('--save_epoch_freq', type=int, default=5,
+        parser.add_argument('--save_epoch_freq', type=int, default=15,
                             help='frequency of saving checkpoints at the end of epochs')
         # parser.add_argument('--continue_train', action='store_true', help='continue training: load the latest model')
         # parser.add_argument('--epoch_count', type=int, default=1,

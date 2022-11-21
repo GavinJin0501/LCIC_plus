@@ -292,13 +292,15 @@ class zVaeWGANModel(BaseModel):
             self.loss_feature = 0.0
 
         self.share_loss = self.loss_G_GAN + self.loss_G_L1 + self.loss_ssim + self.loss_feature
+        # print("Share loss:>", self.share_loss, self.loss_G_GAN, self.loss_G_L1, self.loss_ssim, self.loss_feature)
 
         if self.opt.lambda_z > 0.0:
             self.loss_z_L1 = torch.mean(torch.abs(self.mu2 - self.z_encoded)) * self.opt.lambda_z
         else:
             self.loss_z_L1 = 0.0
 
-        self.loss_G = self.share_loss + self.loss_z_L1
+        self.loss_G = self.share_loss.detach().clone() + self.loss_z_L1
+        # print("Before:", self.loss_G, self.loss_z_L1)
 
         self.optimizer_G.zero_grad()
         self.loss_G.backward(retain_graph=True)
@@ -310,7 +312,8 @@ class zVaeWGANModel(BaseModel):
             self.loss_kl = torch.sum(kl_element).mul_(-0.5) * self.opt.lambda_kl
         else:
             self.loss_kl = 0
-        self.loss_E = self.share_loss + self.loss_kl
+        self.loss_E = self.share_loss.detach().clone() + self.loss_kl
+        # self.loss_E = self.loss_kl
 
         self.optimizer_E.zero_grad()
         self.loss_E.backward()

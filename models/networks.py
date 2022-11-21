@@ -596,7 +596,7 @@ class Progressive_generator(nn.Module):
             x, rgb, _ = self.up_1(x, rgb, latent_z, edge)
             x, rgb, _ = self.up_2(x, rgb, latent_z, edge)
             _, rgb, _ = self.up_3(x, rgb, latent_z, edge)
-            out = F.tanh(rgb)
+            out = torch.tanh(rgb)
             return out
         else:
             x, rgb, rgb_0 = self.head_0(x, rgb, latent_z, edge)
@@ -606,7 +606,7 @@ class Progressive_generator(nn.Module):
             x, rgb, rgb_4 = self.up_1(x, rgb, latent_z, edge)
             x, rgb, rgb_5 = self.up_2(x, rgb, latent_z, edge)
             _, rgb, rgb_6 = self.up_3(x, rgb, latent_z, edge)
-            rgb_final = F.tanh(rgb)
+            rgb_final = torch.tanh(rgb)
             return rgb_0, rgb_1, rgb_2, rgb_3, rgb_4, rgb_5, rgb_6, rgb_final
 
 

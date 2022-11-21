@@ -9,6 +9,7 @@ from util.visualizer import Visualizer
 from pytorch_msssim import ssim
 import numpy as np
 
+torch.autograd.set_detect_anomaly(True)
 
 def test(model, val_dataset):
     model.eval()
@@ -63,18 +64,19 @@ if __name__ == '__main__':
                 continue
             model.optimize_parameters()
 
-            if total_steps % opt.display_freq == 0:
-                save_result = total_steps % opt.update_html_freq == 0
-                visualizer.display_current_results(model.get_current_visuals(), epoch, save_result)
+            # if total_steps % opt.display_freq == 0:
+            #     save_result = total_steps % opt.update_html_freq == 0
+                # visualizer.display_current_results(model.get_current_visuals(), epoch, save_result)
 
             if total_steps % opt.print_freq == 0:
                 losses = model.get_current_losses()
                 tensors = model.get_tensor_encoded()
                 t = (time.time() - iter_start_time) / opt.batch_size
+                # print("Epoch %d Batch %d loss:>" % (epoch, i), losses)
                 visualizer.print_Tensor_encoded(epoch, epoch_iter, tensors)
                 visualizer.print_current_losses(epoch, epoch_iter, losses, t, t_data)
-                if opt.display_id > 0:
-                    visualizer.plot_current_losses(epoch, float(epoch_iter) / dataset_size, opt, losses)
+                # if opt.display_id > 0:
+                #     visualizer.plot_current_losses(epoch, float(epoch_iter) / dataset_size, opt, losses)
 
             if total_steps % opt.save_latest_freq == 0:
                 print('saving the latest model (epoch %d, total_steps %d)' %

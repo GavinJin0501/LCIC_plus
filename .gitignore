@@ -1,3 +1,7 @@
 slurm*
-datasets/*
 *.out
+*.pyc
+*.txt
+checkpoints/*
+.idea/*
+datasets/*

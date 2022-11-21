@@ -7,7 +7,7 @@
           checkpoints_dir: ./checkpoints                 
             conditional_D: True                          	[default: False]
            continue_train: False                         
-                 dataroot: datasets/edges2shoes          	[default: None]
+                 dataroot: datasets\edges2shoes          	[default: None]
              dataset_mode: aligned                       
                 direction: AtoB                          
                display_id: 1                             

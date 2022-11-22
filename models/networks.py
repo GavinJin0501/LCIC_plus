@@ -162,7 +162,7 @@ def define_Feature_Net(requires_grad=False, net_type='vgg16', gpu_ids=[]):
 class Vgg16(torch.nn.Module):
     def __init__(self, requires_grad=False):
         super(Vgg16, self).__init__()
-        os.environ['TORCH_HOME'] = '../../../models/'
+        # os.environ['TORCH_HOME'] = '../../../models/'
         vgg_pretrained_features = models.vgg16(pretrained=True).features
         self.slice1 = torch.nn.Sequential()
         self.slice2 = torch.nn.Sequential()

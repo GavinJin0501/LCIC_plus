@@ -15,7 +15,7 @@ class TrainOptions(BaseOptions):
                             help='visdom server of the web display')
         parser.add_argument('--update_html_freq', type=int, default=4000,
                             help='frequency of saving training results to html')
-        parser.add_argument('--print_freq', type=int, default=100,
+        parser.add_argument('--print_freq', type=int, default=300,
                             help='frequency of showing training results on console')
         parser.add_argument('--save_latest_freq', type=int, default=10000,
                             help='frequency of saving the latest results')

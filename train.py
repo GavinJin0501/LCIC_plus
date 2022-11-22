@@ -18,7 +18,7 @@ def test(model, val_dataset):
         for i, images in enumerate(val_dataset):
             model.set_input(images)
             real_A, fake_B, real_B = model.test(encode=True)
-            cur_score += ssim(fake_B, real_B, val_range=1.0)
+            cur_score += ssim(fake_B, real_B, data_range=1.0)
         cur_score /= len(val_dataset)
     return cur_score
 

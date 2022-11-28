@@ -29,6 +29,7 @@ if __name__ == '__main__':
     z_log_dir = os.path.join(opt.results_dir, 'z_vector.txt')
     std_log_dir = os.path.join(opt.results_dir, 'z_std.txt')
     logvar_log_dir = os.path.join(opt.results_dir, 'z_logvar.txt')
+    
     # test stage
     for i, data in enumerate(dataset):
         model.set_input(data)

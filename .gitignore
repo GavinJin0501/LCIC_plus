@@ -5,3 +5,5 @@ slurm*
 checkpoints/*
 .idea/*
 datasets/*
+results/*
+*.SBATCH

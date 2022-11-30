@@ -114,6 +114,7 @@ class zVaeWGANModel(BaseModel):
         return z, mu, logvar
 
     def z_encode(self):
+        # print("self.real_B:", self.real_B)
         z, logvar = self.netE(self.real_B)
         self.z_encoded = z
         return self.z_encoded
@@ -299,7 +300,9 @@ class zVaeWGANModel(BaseModel):
         else:
             self.loss_z_L1 = 0.0
 
-        self.loss_G = self.share_loss.detach().clone() + self.loss_z_L1
+        self.loss_G = self.share_loss + self.loss_z_L1
+        # self.loss_G = self.share_loss.detach().clone() + self.loss_z_L1
+        # self.loss_G = self.share_loss.clone() + self.loss_z_L1
         # print("Before:", self.loss_G, self.loss_z_L1)
 
         self.optimizer_G.zero_grad()
@@ -312,7 +315,9 @@ class zVaeWGANModel(BaseModel):
             self.loss_kl = torch.sum(kl_element).mul_(-0.5) * self.opt.lambda_kl
         else:
             self.loss_kl = 0
-        self.loss_E = self.share_loss.detach().clone() + self.loss_kl
+        self.loss_E = self.share_loss.detach() + self.loss_kl
+        # self.loss_E = self.share_loss.detach().clone() + self.loss_kl
+        # self.loss_E = self.share_loss.clone() + self.loss_kl
         # self.loss_E = self.loss_kl
 
         self.optimizer_E.zero_grad()

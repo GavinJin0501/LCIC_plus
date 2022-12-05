@@ -561,6 +561,7 @@ class Progressive_generator(nn.Module):
     def __init__(self, opt):
         super(Progressive_generator, self).__init__()
         nf = opt.ngf
+        # self.sw = opt.fineSize // (2 ** 7)
         self.sw = opt.fineSize // (2 ** 7)
         self.sh = self.sw
         # upsample in each block *7

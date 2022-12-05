@@ -1,15 +1,12 @@
-import os
-
 import torch
-import util.util as util
-import numpy as np
 
-# from models.edge_model import edgeModel
-
-# from . import edge_model, networks
 from . import networks
 from .base_model import BaseModel
+import util.util as util
+from numpy import int16, int32
 
+
+# from models import EMA
 
 class zVaeWGANModel(BaseModel):
     def name(self):
@@ -65,14 +62,6 @@ class zVaeWGANModel(BaseModel):
             self.model_names += ['E']
             self.netE = networks.define_E(opt.output_nc, opt.ndf, netE=opt.netE, output_nc=opt.nz, norm=opt.norm,
                                           init_type=opt.init_type, gpu_ids=self.gpu_ids, vaeLike=use_vae)
-        
-        # TODO: load the model here for training process
-        # self.use_edgeNet = opt.use_edgeNet
-        # if self.use_edgeNet:
-        #     self.DexiNet_cp = opt.DexiNet_cp
-        #     self.netEdge = edgeModel()
-        self.use_edgeNet = False
-
         if opt.isTrain:
             if self.gan_mode == 'wgan-gp':
                 self.criterionGAN = networks.WGANGP().to(self.device)
@@ -90,25 +79,14 @@ class zVaeWGANModel(BaseModel):
             else:
                 G_lr, E_lr, D_lr = opt.lr / 2, opt.lr / 2, opt.lr * 2
 
-            # TODO: TTUR use or not? lr difference for G and E 
-            # self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=G_lr, betas=(opt.beta1, opt.beta2))
-            # self.optimizers.append(self.optimizer_G)
-            # if use_E:
-            #     self.optimizer_E = torch.optim.Adam(self.netE.parameters(), lr=E_lr, betas=(opt.beta1, opt.beta2))
-            #     self.optimizers.append(self.optimizer_E)
-
-            self.optimizer_EG = torch.optim.Adam(list(self.netG.parameters()) + list(self.netE.parameters()), 
-                                                    lr=G_lr, betas=(opt.beta1, opt.beta2))
-
+            self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=G_lr, betas=(opt.beta1, opt.beta2))
+            self.optimizers.append(self.optimizer_G)
+            if use_E:
+                self.optimizer_E = torch.optim.Adam(self.netE.parameters(), lr=E_lr, betas=(opt.beta1, opt.beta2))
+                self.optimizers.append(self.optimizer_E)
             if use_D:
                 self.optimizer_D = torch.optim.Adam(self.netD.parameters(), lr=D_lr, betas=(opt.beta1, opt.beta2))
                 self.optimizers.append(self.optimizer_D)
-            
-            if self.use_edgeNet:
-                # TODO: what should this learning rate be?
-                self.optimizer_Edge = torch.optim.Adam(self.netEdge.parameters(), lr=opt.lr, betas=(opt.beta1, opt.beta2))
-                self.optimizers.append(self.optimizer_Edge)
-
 
     def is_train(self):
         return self.opt.isTrain and self.real_A.size(0) == self.opt.batch_size
@@ -117,6 +95,8 @@ class zVaeWGANModel(BaseModel):
         AtoB = self.opt.direction == 'AtoB'
         self.real_A = input['A' if AtoB else 'B'].to(self.device)
         self.real_B = input['B' if AtoB else 'A'].to(self.device)
+        # import pdb
+        # pdb.set_trace()
         self.image_paths = input['A_paths' if AtoB else 'B_paths'][0].split('\\')[-1].split('.')[0]
 
     def get_z_random(self, batch_size, nz, random_type='gauss'):
@@ -134,6 +114,7 @@ class zVaeWGANModel(BaseModel):
         return z, mu, logvar
 
     def z_encode(self):
+        # print("self.real_B:", self.real_B)
         z, logvar = self.netE(self.real_B)
         self.z_encoded = z
         return self.z_encoded
@@ -170,7 +151,6 @@ class zVaeWGANModel(BaseModel):
             # print(z0)
             # return self.z_encoded, self.real_A, self.fake_B, self.real_B, self.logvar
 
-    # for zvae-wgan
     def test_encode(self, z0=None, encode=False, qp=-1, z_log_dir=None):
         with torch.no_grad():
             if encode:  # use encoded z
@@ -313,6 +293,7 @@ class zVaeWGANModel(BaseModel):
             self.loss_feature = 0.0
 
         self.share_loss = self.loss_G_GAN + self.loss_G_L1 + self.loss_ssim + self.loss_feature
+        # print("Share loss:>", self.share_loss, self.loss_G_GAN, self.loss_G_L1, self.loss_ssim, self.loss_feature)
 
         if self.opt.lambda_z > 0.0:
             self.loss_z_L1 = torch.mean(torch.abs(self.mu2 - self.z_encoded)) * self.opt.lambda_z
@@ -320,6 +301,10 @@ class zVaeWGANModel(BaseModel):
             self.loss_z_L1 = 0.0
 
         self.loss_G = self.share_loss + self.loss_z_L1
+        
+        # self.optimizer_G.zero_grad()
+        # self.loss_G.backward(retain_graph=True)
+        # self.optimizer_G.step()
 
         # 2. KL loss
         if self.opt.lambda_kl > 0.0:
@@ -327,18 +312,26 @@ class zVaeWGANModel(BaseModel):
             self.loss_kl = torch.sum(kl_element).mul_(-0.5) * self.opt.lambda_kl
         else:
             self.loss_kl = 0
+        # self.loss_E = self.share_loss.detach().requires_grad_() + self.loss_kl    
+        self.loss_E = self.loss_G + self.loss_kl
 
-        # update E and G together
-        self.loss_total = self.loss_G + self.loss_kl
-        self.optimizer_EG.zero_grad()
-        self.loss_total.backward()
-        self.optimizer_EG.step()
+        # self.optimizer_E.zero_grad()
+        # self.loss_E.backward()
+        # self.optimizer_E.step()
+
+
+        # Our idea:
+        self.optimizer_G.zero_grad()
+        self.loss_G.backward(retain_graph=True)
+        self.optimizer_G.step()
+
+        self.optimizer_E.zero_grad()
+        self.loss_E.backward()
+        self.optimizer_E.step()
         
 
     def update_D(self):
         self.set_requires_grad(self.netD, True)
-        if self.use_edgeNet:
-            self.set_requires_grad(self.netEdge, False)
         # update D1
         if self.opt.lambda_GAN > 0.0:
             self.optimizer_D.zero_grad()
@@ -348,25 +341,19 @@ class zVaeWGANModel(BaseModel):
     def update_G_and_E(self):
         # update G and E
         self.set_requires_grad(self.netD, False)
-        if self.use_edgeNet:
-            self.set_requires_grad(self.netEdge, False)
-    
-        with torch.autograd.set_detect_anomaly(True):
-            self.backward_EG()
-
-    def update_Edge(self):
-        # update edge detection part
-        self.set_requires_grad(self.netD, False)
-        self.set_requires_grad(self.netEdge, True)
-
-        # TODO: add optimizer, determine what the loss should be
-        self.optimizer_Edge.zero_grad()
-        # self.loss.backward()
-        # self.optimizer.step()
+        self.backward_EG()
+        # update G
+        # self.optimizer_G.zero_grad()
+        # share_loss = self.shareloss_EG()
+        # self.backward_G(share_loss)
+        # self.optimizer_G.step()
+        # # update E
+        # self.optimizer_E.zero_grad()
+        # self.backward_E(share_loss)
+        # self.optimizer_E.step()
+        # #
 
     def optimize_parameters(self):
         self.forward()
         self.update_G_and_E()
         self.update_D()
-
-        # TODO: update Edge here

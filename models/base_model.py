@@ -66,15 +66,29 @@ class BaseModel():
 
         lr = self.optimizers[0].param_groups[0]['lr']
         if not self.opt.no_TTUR:
-            new_lr_G = lr / 2
+            new_lr_EG = lr / 2
             new_lr_D = lr * 2
             for param_group in self.optimizer_D.param_groups:
                 param_group['lr'] = new_lr_D
-            for param_group in self.optimizer_G.param_groups:
-                param_group['lr'] = new_lr_G
-            for param_group in self.optimizer_E.param_groups:
-                param_group['lr'] = new_lr_G
+            for param_group in self.optimizer_EG.param_groups:
+                param_group['lr'] = new_lr_EG
         print('learning rate = %.7f' % lr)
+        
+    # def update_learning_rate(self):
+    #     for scheduler in self.schedulers:
+    #         scheduler.step()
+
+    #     lr = self.optimizers[0].param_groups[0]['lr']
+    #     if not self.opt.no_TTUR:
+    #         new_lr_G = lr / 2
+    #         new_lr_D = lr * 2
+    #         for param_group in self.optimizer_D.param_groups:
+    #             param_group['lr'] = new_lr_D
+    #         for param_group in self.optimizer_G.param_groups:
+    #             param_group['lr'] = new_lr_G
+    #         for param_group in self.optimizer_E.param_groups:
+    #             param_group['lr'] = new_lr_G
+    #     print('learning rate = %.7f' % lr)
 
     # return visualization images. train.py will display these images, and save the images to a html
     def get_current_visuals(self):
